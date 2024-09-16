@@ -53,6 +53,21 @@ const setup = () => {
     secondYoYo.addChild(new Ball({ x: -1, y: 10 }, 0, 4, "#777"));
     firstYoYo.addChild(secondYoYo);
     rootNode.addChild(new YoYo({ x: canvas.width / 2, y: canvas.height / 2 }, Math.PI * .7, 150, 25, "blue"));
+    // Add distance fog
+    rootNode.addChild(new Rect({ x: 0, y: 0 }, 0, canvas.width, canvas.height, "rgba(0, 0, 0, 0.2)"));
+    // Draw ship
+    let shipColor = "grey";
+    let shipOutline = "lime";
+    let ship = new SceneNode({ x: canvas.width / 2, y: canvas.height / 2 });
+    ship.addChild(new Rect({ x: -25 - 2, y: 25 - 2 }, 0, 50 + 4, 25 + 4, shipOutline, true));
+    ship.addChild(new Rect({ x: -25, y: 25 }, -Math.PI / 4, 18 + 4, 18 + 4, shipOutline));
+    ship.addChild(new Rect({ x: 0, y: 25 }, -Math.PI / 4, 18 + 4, 18 + 4, shipOutline));
+    ship.addChild(new Ball({ x: 0, y: 0 }, 0, 25 + 4, shipOutline, true));
+    rootNode.addChild(ship);
+    ship.addChild(new Rect({ x: 0, y: 0 }, 0, 50, 25, shipColor, true));
+    ship.addChild(new Rect({ x: 0, y: 0 }, -Math.PI / 4, 18, 18, shipColor));
+    ship.addChild(new Rect({ x: 25, y: 0 }, -Math.PI / 4, 18, 18, shipColor));
+    ship.addChild(new Ball({ x: 25, y: 25 }, 0, 25, shipColor, true));
     rootNode._ready();
     setInterval(fixedLoop, 1 / 30);
     requestAnimationFrame(frameLoop);
