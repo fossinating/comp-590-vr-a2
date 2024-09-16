@@ -19,6 +19,6 @@ export class YoYo extends SceneNode {
     }
 
     fixedUpdate(deltaTime: number): void {
-        this.rotation += deltaTime * Math.PI * 0.1;
+        this.rotation += deltaTime * Math.PI * 0.01;
     }
 }

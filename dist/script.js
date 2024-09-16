@@ -1,3 +1,4 @@
+import { Input, InputMap, Inputs } from "./Input.js";
 import { Ball } from "./SceneNodes/ball.js";
 import { Rect } from "./SceneNodes/rect.js";
 import { SceneNode } from "./SceneNodes/sceneNode.js";
@@ -8,7 +9,7 @@ var rootNode;
 var lastFrameLoop = new Date();
 // Framerate-dependent main loop
 const frameLoop = () => {
-    var deltaTime = (lastFrameLoop.getTime() - new Date().getTime()) / 1_000;
+    var deltaTime = (new Date().getTime() - lastFrameLoop.getTime()) / 1_000;
     lastFrameLoop = new Date();
     update(deltaTime);
     draw(deltaTime);
@@ -16,7 +17,7 @@ const frameLoop = () => {
 };
 var lastFixedLoop = new Date();
 const fixedLoop = () => {
-    var deltaTime = (lastFixedLoop.getTime() - new Date().getTime()) / 1_000;
+    var deltaTime = (new Date().getTime() - lastFixedLoop.getTime()) / 1_000;
     lastFixedLoop = new Date();
     updateInput(deltaTime);
     fixedUpdate(deltaTime);
@@ -28,6 +29,7 @@ const draw = (deltaTime) => {
     ctx.restore();
 };
 const updateInput = (deltaTime) => {
+    Input.update();
 };
 const update = (deltaTime) => {
     rootNode._update(deltaTime);
@@ -36,6 +38,18 @@ const fixedUpdate = (deltaTime) => {
     rootNode._fixedUpdate(deltaTime);
 };
 const setup = () => {
+    // Set up inputs
+    Input.inputMaps.set(Inputs.ACCELERATE, new InputMap("KeyW", "ArrowUp"));
+    Input.inputMaps.set(Inputs.BRAKE, new InputMap("KeyS", "ArrowDown"));
+    Input.inputMaps.set(Inputs.TURN_LEFT, new InputMap("KeyA", "ArrowLeft"));
+    Input.inputMaps.set(Inputs.TURN_RIGHT, new InputMap("KeyD", "ArrowRight"));
+    Input.inputMaps.set(Inputs.SHOOT, new InputMap("Space"));
+    addEventListener("keydown", (event) => {
+        Input.keyDown(event.code);
+    });
+    addEventListener("keyup", (event) => {
+        Input.keyUp(event.code);
+    });
     rootNode = new SceneNode();
     rootNode.addChild(new Rect({ x: 0, y: 0 }, 0, canvas.width, canvas.height, "rgba(0, 0, 0)"));
     // Stars
@@ -59,16 +73,46 @@ const setup = () => {
     let shipColor = "#595959";
     let shipOutlineColor = "#b0b0b0";
     let ship = new SceneNode({ x: canvas.width / 2, y: canvas.height / 2 });
+    let registerShipMovement = (ship) => {
+        let velocity = { x: 0, y: 0 };
+        const MAX_SPEED = 50;
+        const ACCEL = 70;
+        ship.registerFixedUpdate((deltaTime) => {
+            let accel = 0;
+            if (Input.isInputPressed(Inputs.ACCELERATE)) {
+                accel += ACCEL;
+            }
+            if (Input.isInputPressed(Inputs.BRAKE)) {
+                accel -= ACCEL;
+            }
+            if (Input.isInputPressed(Inputs.TURN_LEFT)) {
+                ship.rotation -= Math.PI * .5 * deltaTime;
+            }
+            if (Input.isInputPressed(Inputs.TURN_RIGHT)) {
+                ship.rotation += Math.PI * .5 * deltaTime;
+            }
+            velocity.x += Math.sin(ship.rotation) * accel * deltaTime;
+            velocity.y -= Math.cos(ship.rotation) * accel * deltaTime;
+            let speed = Math.sqrt(Math.pow(velocity.x, 2) + Math.pow(velocity.y, 2));
+            if (speed > MAX_SPEED) {
+                velocity.x *= MAX_SPEED / speed;
+                velocity.y *= MAX_SPEED / speed;
+            }
+            ship.position.x += velocity.x * deltaTime;
+            ship.position.y += velocity.y * deltaTime;
+        });
+    };
+    registerShipMovement(ship);
     rootNode.addChild(ship);
     // Main box
-    let shipOutlineDraw = new SceneNode({ x: -25 - 2, y: -12.5 - 2 });
+    let shipOutlineDraw = new SceneNode({ x: 25 + 2, y: 12.5 + 2 }, Math.PI);
     ship.addChild(shipOutlineDraw);
     shipOutlineDraw.addChild(new Rect({ x: 0, y: 0 }, 0, 50 + 4, 25 + 4, shipOutlineColor, true));
     shipOutlineDraw.addChild(new Rect({ x: 0, y: 0 }, -Math.PI / 4, 20, 20, shipOutlineColor));
     shipOutlineDraw.addChild(new Rect({ x: 25, y: 0 }, -Math.PI / 4, 20, 20, shipOutlineColor));
     shipOutlineDraw.addChild(new Ball({ x: 27, y: 27 }, 0, 25 + 2, shipOutlineColor, true));
     shipOutlineDraw.addChild(new Rect({ x: 27 - 10, y: 45 }, 0, 20, 10, shipOutlineColor));
-    let shipDraw = new SceneNode({ x: -25, y: -12.5 });
+    let shipDraw = new SceneNode({ x: 25, y: 12.5 }, Math.PI);
     ship.addChild(shipDraw);
     shipDraw.addChild(new Rect({ x: 0, y: 0 }, 0, 50, 25, shipColor, true));
     shipDraw.addChild(new Rect({ x: 0, y: 0 }, -Math.PI / 4, 18, 18, shipColor));
