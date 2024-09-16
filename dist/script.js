@@ -56,18 +56,25 @@ const setup = () => {
     // Add distance fog
     rootNode.addChild(new Rect({ x: 0, y: 0 }, 0, canvas.width, canvas.height, "rgba(0, 0, 0, 0.2)"));
     // Draw ship
-    let shipColor = "grey";
-    let shipOutline = "lime";
+    let shipColor = "#595959";
+    let shipOutlineColor = "#b0b0b0";
     let ship = new SceneNode({ x: canvas.width / 2, y: canvas.height / 2 });
-    ship.addChild(new Rect({ x: -25 - 2, y: 25 - 2 }, 0, 50 + 4, 25 + 4, shipOutline, true));
-    ship.addChild(new Rect({ x: -25, y: 25 }, -Math.PI / 4, 18 + 4, 18 + 4, shipOutline));
-    ship.addChild(new Rect({ x: 0, y: 25 }, -Math.PI / 4, 18 + 4, 18 + 4, shipOutline));
-    ship.addChild(new Ball({ x: 0, y: 0 }, 0, 25 + 4, shipOutline, true));
     rootNode.addChild(ship);
-    ship.addChild(new Rect({ x: 0, y: 0 }, 0, 50, 25, shipColor, true));
-    ship.addChild(new Rect({ x: 0, y: 0 }, -Math.PI / 4, 18, 18, shipColor));
-    ship.addChild(new Rect({ x: 25, y: 0 }, -Math.PI / 4, 18, 18, shipColor));
-    ship.addChild(new Ball({ x: 25, y: 25 }, 0, 25, shipColor, true));
+    // Main box
+    let shipOutlineDraw = new SceneNode({ x: -25 - 2, y: -12.5 - 2 });
+    ship.addChild(shipOutlineDraw);
+    shipOutlineDraw.addChild(new Rect({ x: 0, y: 0 }, 0, 50 + 4, 25 + 4, shipOutlineColor, true));
+    shipOutlineDraw.addChild(new Rect({ x: 0, y: 0 }, -Math.PI / 4, 20, 20, shipOutlineColor));
+    shipOutlineDraw.addChild(new Rect({ x: 25, y: 0 }, -Math.PI / 4, 20, 20, shipOutlineColor));
+    shipOutlineDraw.addChild(new Ball({ x: 27, y: 27 }, 0, 25 + 2, shipOutlineColor, true));
+    shipOutlineDraw.addChild(new Rect({ x: 27 - 10, y: 45 }, 0, 20, 10, shipOutlineColor));
+    let shipDraw = new SceneNode({ x: -25, y: -12.5 });
+    ship.addChild(shipDraw);
+    shipDraw.addChild(new Rect({ x: 0, y: 0 }, 0, 50, 25, shipColor, true));
+    shipDraw.addChild(new Rect({ x: 0, y: 0 }, -Math.PI / 4, 18, 18, shipColor));
+    shipDraw.addChild(new Rect({ x: 25, y: 0 }, -Math.PI / 4, 18, 18, shipColor));
+    shipDraw.addChild(new Ball({ x: 25, y: 25 }, 0, 25, shipColor, true));
+    shipOutlineDraw.addChild(new Rect({ x: 27 - 8, y: 43 }, 0, 16, 10, shipColor));
     rootNode._ready();
     setInterval(fixedLoop, 1 / 30);
     requestAnimationFrame(frameLoop);
