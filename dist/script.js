@@ -1,4 +1,6 @@
 import { Input, InputMap, Inputs } from "./Input.js";
+import { PhysicsBody, PhysicsServer } from "./PhysicsServer.js";
+import { Asteroid } from "./SceneNodes/asteroid.js";
 import { Ball } from "./SceneNodes/ball.js";
 import { Rect } from "./SceneNodes/rect.js";
 import { SceneNode } from "./SceneNodes/sceneNode.js";
@@ -27,6 +29,9 @@ const draw = (deltaTime) => {
     ctx.save();
     rootNode._draw(ctx, deltaTime);
     ctx.restore();
+    if (document.debug === true) {
+        PhysicsServer.draw(ctx);
+    }
 };
 const updateInput = (deltaTime) => {
     Input.update();
@@ -35,7 +40,19 @@ const update = (deltaTime) => {
     rootNode._update(deltaTime);
 };
 const fixedUpdate = (deltaTime) => {
+    document.getElementById("gameInfoDisplay").innerHTML = "Time Survived: " + getTimeSurvived();
+    PhysicsServer.update();
     rootNode._fixedUpdate(deltaTime);
+};
+let gameLoop;
+let gamePlaying = false;
+let startTime;
+const getTimeSurvived = () => {
+    let ms = new Date().getTime() - startTime.getTime();
+    return ((ms / 1000 > 60 * 60 ? Math.floor(ms / 1000 / (60 * 60)) + ":" : "") + // Hours
+        (ms / 1000 > 60 ? ((ms / 1000 / 60) % 60 < 10 ? "0" : "") + Math.floor((ms / 1000 / 60) % 60) + ":" + ((ms / 1000) % 60 < 10 ? "0" : "") : "") + // Minutes
+        (ms % 60_000) / 1000 // Seconds & milliseconds
+    );
 };
 const setup = () => {
     // Set up inputs
@@ -75,8 +92,8 @@ const setup = () => {
     let ship = new SceneNode({ x: canvas.width / 2, y: canvas.height / 2 });
     let registerShipMovement = (ship) => {
         let velocity = { x: 0, y: 0 };
-        const MAX_SPEED = 50;
-        const ACCEL = 70;
+        const MAX_SPEED = 80;
+        const ACCEL = 120;
         ship.registerFixedUpdate((deltaTime) => {
             let accel = 0;
             if (Input.isInputPressed(Inputs.ACCELERATE)) {
@@ -100,10 +117,47 @@ const setup = () => {
             }
             ship.position.x += velocity.x * deltaTime;
             ship.position.y += velocity.y * deltaTime;
+            const SAFE_BORDER = 40;
+            if (ship.position.x > canvas.width - SAFE_BORDER) {
+                ship.position.x = canvas.width - SAFE_BORDER;
+            }
+            else if (ship.position.x < SAFE_BORDER) {
+                ship.position.x = SAFE_BORDER;
+            }
+            if (ship.position.y > canvas.height - SAFE_BORDER) {
+                ship.position.y = canvas.height - SAFE_BORDER;
+            }
+            else if (ship.position.y < SAFE_BORDER) {
+                ship.position.y = SAFE_BORDER;
+            }
         });
     };
     registerShipMovement(ship);
+    // Add collision for ship
+    let shipCollision = new PhysicsBody({ x: 0, y: 0 }, 25);
+    ship.addChild(shipCollision);
+    shipCollision.registerCollisionCallback((body) => {
+        clearInterval(gameLoop);
+        gamePlaying = false;
+        //document.getElementById("gameStart").setAttribute("style", "display: inherit");
+        document.getElementById("gameInfoDisplay").innerHTML = "Game Over!<br>Time Survived: " + getTimeSurvived() + "</br>Reload the page to play again";
+    });
     rootNode.addChild(ship);
+    // Asteroid spawner
+    let asteroidSpawner = new SceneNode();
+    let asteroidSpawnerScript = (node) => {
+        let waitTime = 2;
+        let timeRemaining = 0;
+        node.registerFixedUpdate((deltaTime) => {
+            timeRemaining -= deltaTime;
+            if (timeRemaining < 0) {
+                node.addChild(new Asteroid());
+                timeRemaining = waitTime;
+            }
+        });
+    };
+    asteroidSpawnerScript(asteroidSpawner);
+    rootNode.addChild(asteroidSpawner);
     // Main box
     let shipOutlineDraw = new SceneNode({ x: 25 + 2, y: 12.5 + 2 }, Math.PI);
     ship.addChild(shipOutlineDraw);
@@ -120,7 +174,11 @@ const setup = () => {
     shipDraw.addChild(new Ball({ x: 25, y: 25 }, 0, 25, shipColor, true));
     shipOutlineDraw.addChild(new Rect({ x: 27 - 8, y: 43 }, 0, 16, 10, shipColor));
     rootNode._ready();
-    setInterval(fixedLoop, 1 / 30);
+    gameLoop = setInterval(fixedLoop, 1 / 30);
     requestAnimationFrame(frameLoop);
 };
-setup();
+document.startGame = () => {
+    document.getElementById("gameStart").setAttribute("style", "display: none");
+    startTime = new Date();
+    setup();
+};

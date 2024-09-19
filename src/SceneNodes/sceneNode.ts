@@ -50,6 +50,25 @@ export class SceneNode {
         }
     }
 
+    unloadCallbacks: Array<() => void> = [];
+    unloaded = false;
+    _unload() {
+        if (this.unloaded) {
+            return;
+        }
+        for (let child of this.children) {
+            child._unload()
+        }
+
+        for (let callback of this.unloadCallbacks) {
+            callback();
+        }
+
+        console.log("unloading");
+        this.parent.removeChild(this);
+        this.unloaded = true;
+    }
+
     /*
 
     Allow functions to be passed in for certain events
@@ -92,6 +111,19 @@ export class SceneNode {
     position: {x: number, y: number} = {x: 0, y: 0};
     rotation: number = 0;
 
+    getGlobalPosition(): {x: number, y: number} {
+        let _parent = this.parent;
+        let global_position = {x: 0, y: 0};
+
+        while (_parent !== null) {
+            let old_global = {x: global_position.x, y: global_position.y};
+            global_position.x = _parent.position.x + Math.cos(_parent.rotation) * old_global.x + Math.sin(_parent.rotation) * old_global.y;
+            global_position.y = _parent.position.y + Math.cos(_parent.rotation) * old_global.y + Math.sin(_parent.rotation) * old_global.x;
+            _parent = _parent.parent;
+        }
+
+        return global_position;
+    }
 
     /*
 
