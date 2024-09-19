@@ -1,4 +1,4 @@
-# A2
+# A3
 
 GitHub link to the code: https://github.com/fossinating/comp-590-vr-a2
 Link to a live version: https://fossinating.com/comp-590-vr-a2/src/

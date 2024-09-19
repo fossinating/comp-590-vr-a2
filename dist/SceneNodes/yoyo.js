@@ -13,6 +13,6 @@ export class YoYo extends SceneNode {
         super.addChild(this.ball);
     }
     fixedUpdate(deltaTime) {
-        this.rotation += deltaTime * Math.PI * 0.1;
+        this.rotation += deltaTime * Math.PI * 0.01;
     }
 }
